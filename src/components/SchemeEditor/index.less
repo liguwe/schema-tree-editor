@@ -1,0 +1,59 @@
+.content{
+  width: 832px;
+}
+.directoryNode{
+  padding-left: 24px;
+  position: relative;
+  overflow: hidden;
+  &:before{
+    content: "";
+    position: absolute;
+    left:30px;
+    top:24px;
+    height: 100%;
+    width: 1px;
+    background: #181818;
+  }
+}
+.leafNode{
+  padding-left: 24px;
+  position: relative;
+  &:before{
+    content: "";
+    position: absolute;
+    left:7px;
+    top:12px;
+    width: 24px;
+    height: 1px;
+    background: #181818;
+  }
+  &:hover{
+
+    width: 832px;
+    &:before{
+      width: 100px;
+      background-color: aliceblue;
+      position: absolute;
+      left:-100px;
+    }
+  }
+}
+.directoryText{
+  //padding-left: 24px;
+  position: relative;
+  display: inline-block;
+  &:before{
+    content: "";
+    position: absolute;
+    left:-17px;
+    top:12px;
+    width: 24px;
+    height: 1px;
+    background: #181818;
+  }
+}
+
+input{
+  border: none;
+  outline:none;
+}
