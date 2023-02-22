@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons-vue';
 import Actions from "@/components/SchemeEditor/Actions";
 import ExtraActions from "@/components/SchemeEditor/extraActions";
-import SettingProps from './SettingProps.vue';
+import SettingPropsModal from './SettingPropsModal.vue';
 
 function isLeafNode(type: string) {
     return ['string', 'boolean', 'integer', 'number'].includes(type)
@@ -255,7 +255,7 @@ export default defineComponent({
         return () => (
             <div class={'content'}>
                 {renderTree(data)}
-                <SettingProps
+                <SettingPropsModal
                     onOk={handleModalOk}
                     onCancel={handleModalCancel}
                     visible={visible.value}/>
