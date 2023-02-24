@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import SchemeEditor from './components/SchemeEditor'
+import SchemeEditor from './components/SchemeEditor';
+import Test from './components/SchemeEditor/Test.vue';
 </script>
 
 <template>
   <SchemeEditor/>
+<!--  <Test/>-->
 </template>
 
 <style scoped>

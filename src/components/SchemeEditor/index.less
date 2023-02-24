@@ -5,6 +5,11 @@
 @hover-bg-color: #f5f5f5;
 //@hover-bg-color: hsla(218, 33%, 94%, 1);;
 
+
+body{
+  color: #000000d9;
+  font-size: 14px;
+}
 .content {
   width: 832px;
   height: auto;
@@ -16,6 +21,7 @@
 .directoryNode {
   display: block;
   position: relative;
+  overflow: hidden;
 }
 
 .directoryContainerExpand {
@@ -123,13 +129,12 @@ input {
 }
 
 .action {
-  display: none;
+  //display: none;
   width: 150px;
 }
 
 .extraAction {
-
-  width: 66px;
+  width: 72px;
   margin-right: 8px;
 }
 .add-tag {
@@ -162,4 +167,10 @@ input {
     background-color: @hover-bg-color;
   }
   //todo 设置不同数据类型的的颜色
+}
+
+.floatingSetting{
+  background-color: #ffffff;
+  z-index: 22;
+  width: 600px;
 }

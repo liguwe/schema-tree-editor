@@ -1,4 +1,15 @@
-import {computed, defineComponent, defineEmits, defineProps, reactive, Ref, ref, UnwrapRef, onMounted} from 'vue';
+import {
+    computed,
+    defineComponent,
+    defineEmits,
+    defineProps,
+    reactive,
+    Ref,
+    ref,
+    UnwrapRef,
+    onMounted,
+    onUnmounted
+} from 'vue';
 import './index.less';
 import Editable from './Editable.vue';
 import {
@@ -6,9 +17,15 @@ import {
     RightOutlined,
     PlusOutlined,
 } from '@ant-design/icons-vue';
-import Actions from "@/components/SchemeEditor/Actions";
-import ExtraActions from "@/components/SchemeEditor/extraActions";
+import Actions from "@/components/SchemeEditor/Actions.vue";
+import ExtraActions from "@/components/SchemeEditor/ExtraActions.vue";
 import SettingPropsModal from './SettingPropsModal.vue';
+import DataTypeLink from './DataTypeLink.vue';
+import {computePosition, autoPlacement} from '@floating-ui/dom';
+// @ts-ignore
+import vClickOutside from 'v-click-outside'
+
+const {bind, unbind} = vClickOutside.directive
 
 function isLeafNode(type: string) {
     return ['string', 'boolean', 'integer', 'number'].includes(type)
@@ -18,9 +35,9 @@ function isObject(type: string) {
     return type === 'object';
 }
 
-
 export default defineComponent({
     name: 'SchemeEditor',
+
     setup() {
         const data = reactive({
             "type": "object",
@@ -146,26 +163,71 @@ export default defineComponent({
                 tree.extraViewInfo.isExpand = !tree.extraViewInfo.isExpand;
             }
         }
-
         const visible = ref(false);
-        const activeKey = ref('1');
 
         const addProps = (tree: any, e: any) => {
 
         }
+        const moveUp = (keyIndex: any, parent: any) => {
+            const keys = Object.keys(parent.properties);
+            // 互换两个元素的位置
+            [keys[keyIndex - 1], keys[keyIndex]] = [keys[keyIndex], keys[keyIndex - 1]];
+            let newObj: any = {};
+            keys.forEach((item) => {
+                newObj[item] = parent.properties[item];
+            })
+            parent.properties = {...newObj};
+        };
 
-        const moveUp = () => {
-        };
-        const moveDown = () => {
-        };
-        const copy = () => {
+        const moveDown = (keyIndex: any, parent: any) => {
+            const keys = Object.keys(parent.properties);
+            // 互换两个元素的位置
+            [keys[keyIndex + 1], keys[keyIndex]] = [keys[keyIndex], keys[keyIndex + 1]];
+            let newObj: any = {};
+            keys.forEach((item) => {
+                newObj[item] = parent.properties[item];
+            })
+            parent.properties = {...newObj};
         };
 
-        const setRequire = () => {
+
+        const copy = (keyIndex: any, parent: any) => {
+            const keys = Object.keys(parent.properties);
+            const key = keys[keyIndex];
+            const copyObj = JSON.parse(JSON.stringify(parent.properties[key]));
+            keys.splice(keyIndex + 1, 0, `${key}-copy`);
+            let newObj: any = {};
+            keys.forEach((item) => {
+                if (parent.properties[item]) {
+                    newObj[item] = parent.properties[item];
+                } else {
+                    newObj[item] = copyObj;
+                }
+            })
+            parent.properties = {...newObj};
+        }
+
+        const setRequire = (keyIndex: any, parent: any) => {
+            const keys = Object.keys(parent.properties);
+            const key = keys[keyIndex];
+            if (!parent.required.includes(key)) {
+                parent.required.push(key);
+            }
         };
-        const addDesc = () => {
+        const addDesc = (keyIndex: any, parent: any) => {
+            const keys = Object.keys(parent.properties);
+            const key = keys[keyIndex];
+            // ::::todo 添加描述逻辑
         };
-        const del = () => {
+
+        const del = (keyIndex: any, parent: any) => {
+            const keys = Object.keys(parent.properties);
+            keys.splice(keyIndex, 1);
+            let newObj: any = {};
+            keys.forEach((item) => {
+                newObj[item] = parent.properties[item];
+            })
+            parent.properties = {...newObj};
         };
 
         function handleModalOk() {
@@ -176,18 +238,51 @@ export default defineComponent({
             visible.value = false;
         }
 
-        const showSettingPropsModal = (e: any, tree: any) => {
+        const floatingCon: any = ref(null);
+        const floating: any = ref(null);
+        const showSettingPropsModal = (tree: any, e: any) => {
             visible.value = true;
+            computePosition(e.target, floating.value, {
+                placement: 'bottom-start', // 'bottom' by default
+                middleware: [autoPlacement({
+                    // top-start, right-start, bottom-start, left-start
+                    // alignment: 'right',
+                    // autoAlignment: false,
+
+                })],
+            }).then(({x, y}) => {
+                Object.assign(floating.value.style, {
+                    left: `${8 + x}px`,
+                    top: `${y}px`,
+                });
+            });
         };
 
-        function onTabChange(val: any) {
-            activeKey.value = val;
-        }
+        onMounted(() => {
+            // 添加点击事件监听器
+            document.addEventListener('click', (event) => {
+                // 如果单击事件不是发生在目标元素或其后代元素上
+                // visible.value = floatingCon?.value.contains(event.target);
+                if(event?.target?.className?.includes('setDataTypeAction')){
+                    return;
+                }
+                console.log(floatingCon?.value,event.target)
+                if(!floatingCon?.value?.contains(event.target)){
+                    visible.value = false;
+                }
+            });
+        })
+        onUnmounted(() => {
+            // unbind(floating.value, { value: onClickOutside });
+        })
 
 
-        const renderTree = (tree: any) => {
+
+
+        const renderTree = (tree: any, option: any) => {
+            const {keyIndex, parent, isFirst, isLast, keyName} = option;
             if (isObject(tree.type)) {
-                const {isRoot, isExpand, name, depth} = tree?.extraViewInfo || {};
+                const {isRoot, isExpand, depth} = tree?.extraViewInfo || {};
                 return <div class={{'directoryNode': true, "rootNode": isRoot}}>
                     <div class={'directoryText'}
                          style={{'paddingLeft': `${depth * 30}px`}}>
@@ -199,7 +294,8 @@ export default defineComponent({
                             {!isExpand ?
                                 <RightOutlined onClick={expandIt.bind(this, tree)} class={'expandIcon'}/> : null}
 
-                            {!isRoot ? <Editable value={name}/> : null}
+                            {/*{!isRoot ? <Editable value={name}/> : null}*/}
+                            {!isRoot ? <span>{keyName}</span> : null}
                             {!isRoot ? <span class={'baseInfoSpace'}>:</span> : null}
                             <a href="javascript:void(0)"
                                onClick={showSettingPropsModal.bind(this, tree)}
@@ -209,10 +305,20 @@ export default defineComponent({
                             <PlusOutlined onClick={addProps.bind(this, tree)} class={'addIcon'}/>
                         </div>
                         <div class={'action'}>
-                            <Actions moveDown={moveDown} moveUp={moveUp} copy={copy}/>
+                            <Actions
+                                isRoot={isRoot}
+                                isFirst={isFirst}
+                                isLast={isLast}
+                                onMoveDown={moveDown.bind(this, keyIndex, parent)}
+                                onMoveUp={moveUp.bind(this, keyIndex, parent)}
+                                onCopy={copy.bind(this, keyIndex, parent)}/>
                         </div>
                         <div class={'extraAction'}>
-                            <ExtraActions addDesc={addDesc} del={del} setRequire={setRequire}/>
+                            <ExtraActions
+                                isRoot={isRoot}
+                                onAddDesc={addDesc.bind(this, keyIndex, parent)}
+                                onDel={del.bind(this, keyIndex, parent)}
+                                onSetRequire={setRequire.bind(this, keyIndex, parent)}/>
                         </div>
                     </div>
                     <div class={{
@@ -221,26 +327,48 @@ export default defineComponent({
                         'directoryContainerFold': !isExpand
                     }}>
                         {
-                            Object.entries(tree.properties).map(([key, value]: any) => {
+                            Object.entries(tree.properties).map(([key, value]: any, index: number, arr: any) => {
+                                const isFirst = index === 0;
+                                const isLast = index === arr.length - 1;
                                 const depth = value.extraViewInfo.depth;
                                 if (isObject(value.type)) {
-                                    return renderTree(value);
+                                    return renderTree(value, {
+                                        keyName: key,
+                                        keyIndex: index,
+                                        tree: true,
+                                        parent: tree,
+                                        isFirst: isFirst,
+                                        isLast: isLast,
+                                    });
                                 } else {
-                                    return (<div class={'leafNode'} style={{'paddingLeft': `${depth * 30}px`}}>
+                                    return (<div
+                                        key={index}
+                                        class={'leafNode'} style={{'paddingLeft': `${depth * 30}px`}}>
                                         <div class={'leafNodeHorizontalLine'}
                                              style={{left: `${(depth - 1) * 30 + 8}px`}}/>
                                         <div class={'baseInfo'}>
-                                            <Editable value={key}/>
+                                            {/*<Editable value={key}/>*/}
+                                            <span>{key}</span>
                                             <span class={'baseInfoSpace'}>:</span>
                                             <a class={[value.type, 'setDataTypeAction']}
                                                onClick={showSettingPropsModal.bind(this, value)}
                                                href='javascript:void(0)'>{value.type}</a>
                                         </div>
                                         <div class={'action'}>
-                                            <Actions moveDown={moveDown} moveUp={moveUp} copy={copy}/>
+                                            <Actions
+                                                isFirst={isFirst}
+                                                isLast={isLast}
+                                                isRoot={isRoot}
+                                                onMoveDown={moveDown.bind(this, index, tree)}
+                                                onCopy={copy.bind(this, index, tree)}
+                                                onMoveUp={moveUp.bind(this, index, tree)}/>
                                         </div>
                                         <div class={'extraAction'}>
-                                            <ExtraActions addDesc={addDesc} del={del} setRequire={setRequire}/>
+                                            <ExtraActions
+                                                isRoot={false}
+                                                onAddDesc={addDesc.bind(this, index, tree)}
+                                                onDel={del.bind(this, index, tree)}
+                                                onSetRequire={setRequire.bind(this, index, tree)}/>
                                         </div>
                                     </div>)
                                 }
@@ -252,13 +380,32 @@ export default defineComponent({
             }
         }
 
+
+        // const directives = [
+        //     { name: 'v-if', value: false, modifiers: { abc: true } }
+        // ]
         return () => (
             <div class={'content'}>
-                {renderTree(data)}
-                <SettingPropsModal
-                    onOk={handleModalOk}
-                    onCancel={handleModalCancel}
-                    visible={visible.value}/>
+                {renderTree(data, {})}
+                <div ref={floatingCon}>
+                    <div
+                        class={'floatingSetting'}
+                        ref={floating}
+                        style={{
+                            position: 'fixed',
+                            display: visible.value ? 'block' : 'none',
+                        }}
+                    >
+                        <a-card title={null}>
+                            <SettingPropsModal
+                                onOk={handleModalOk}
+                                onCancel={handleModalCancel}
+                                visible={visible.value}/>
+                        </a-card>
+
+                    </div>
+                </div>
+
             </div>
         )
     }

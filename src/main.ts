@@ -3,6 +3,8 @@ import { createPinia } from 'pinia'
 // 引入 Antd
 import App from './App.vue'
 import router from './router'
+// @ts-ignore
+import vClickOutside from 'v-click-outside'
 
 import './assets/main.css'
 
@@ -16,7 +18,7 @@ const app = createApp(App)
 // app.config.productionTip = false;
 
 app.use(Antd);
-
+app.use(vClickOutside)
 app.use(createPinia())
 app.use(router)
 
