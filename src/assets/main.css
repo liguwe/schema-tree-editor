@@ -23,8 +23,8 @@ a,
 
 @media (min-width: 1024px) {
   body {
-    display: flex;
-    place-items: center;
+    /*display: flex;*/
+    /*place-items: center;*/
   }
 
   #app {
@@ -32,4 +32,8 @@ a,
     grid-template-columns: 1fr 1fr;
     padding: 0 2rem;
   }
+}
+body,html {
+height: 1000vh!important;
+  overflow: scroll;
 }

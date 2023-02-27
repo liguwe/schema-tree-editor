@@ -21,7 +21,7 @@ import Actions from "@/components/SchemeEditor/Actions.vue";
 import ExtraActions from "@/components/SchemeEditor/ExtraActions.vue";
 import SettingPropsModal from './SettingPropsModal.vue';
 import DataTypeLink from './DataTypeLink.vue';
-import {computePosition, autoPlacement} from '@floating-ui/dom';
+import {computePosition, autoPlacement, arrow, flip, size} from '@floating-ui/dom';
 // @ts-ignore
 import vClickOutside from 'v-click-outside'
 
@@ -240,21 +240,43 @@ export default defineComponent({
 
         const floatingCon: any = ref(null);
         const floating: any = ref(null);
+        const floatingArrow: any = ref(null);
         const showSettingPropsModal = (tree: any, e: any) => {
             visible.value = true;
             computePosition(e.target, floating.value, {
-                placement: 'bottom-start', // 'bottom' by default
-                middleware: [autoPlacement({
-                    // top-start, right-start, bottom-start, left-start
-                    // alignment: 'right',
-                    // autoAlignment: false,
-
-                })],
-            }).then(({x, y}) => {
+                placement: 'right-start',
+                middleware: [
+                    // autoPlacement({
+                    //     alignment: 'start',
+                    // }),
+                    // size({
+                    //     apply({availableWidth, availableHeight, elements}) {
+                    //         Object.assign(elements.floating.style, {
+                    //             maxWidth: `${availableWidth}px`,
+                    //             maxHeight: `${availableHeight}px`,
+                    //         });
+                    //
+                    //     },
+                    // }),
+                    // arrow({
+                    //     element: floatingArrow.value,
+                    // }),
+                ],
+            }).then(({x, y, middlewareData}) => {
                 Object.assign(floating.value.style, {
                     left: `${8 + x}px`,
                     top: `${y}px`,
                 });
+                // if (middlewareData.arrow) {
+                //     // let x1 = middlewareData.arrow.x;
+                //     let y1 = middlewareData.arrow.y;
+                //     console.log(832, middlewareData.arrow)
+                //     Object.assign(floatingArrow.value.style, {
+                //         left: '-10px',
+                //         top: y1 ? `${y1}px` : '0px',
+                //     });
+                // }
+
             });
         };
 
@@ -263,20 +285,16 @@ export default defineComponent({
             document.addEventListener('click', (event) => {
                 // 如果单击事件不是发生在目标元素或其后代元素上
                 // visible.value = floatingCon?.value.contains(event.target);
-                if(event?.target?.className?.includes('setDataTypeAction')){
+                if (event?.target?.className?.includes('setDataTypeAction')) {
                     return;
                 }
-                console.log(floatingCon?.value,event.target)
-                if(!floatingCon?.value?.contains(event.target)){
+                if (!floatingCon?.value?.contains(event.target)) {
                     visible.value = false;
                 }
             });
         })
         onUnmounted(() => {
-            // unbind(floating.value, { value: onClickOutside });
         })
-
-
 
 
         const renderTree = (tree: any, option: any) => {
@@ -389,23 +407,25 @@ export default defineComponent({
                 {renderTree(data, {})}
                 <div ref={floatingCon}>
                     <div
-                        class={'floatingSetting'}
+                        className={'floatingSetting'}
                         ref={floating}
                         style={{
-                            position: 'fixed',
+                            position: 'absolute',
                             display: visible.value ? 'block' : 'none',
                         }}
                     >
-                        <a-card title={null}>
+                        <a-card
+                            bodyStyle={{padding: '16px'}}
+                            className={'floatingSetting-card'}
+                            title={null}>
                             <SettingPropsModal
                                 onOk={handleModalOk}
                                 onCancel={handleModalCancel}
                                 visible={visible.value}/>
                         </a-card>
-
+                        <div ref={floatingArrow} class="floatingSetting-arrow"></div>
                     </div>
                 </div>
-
             </div>
         )
     }

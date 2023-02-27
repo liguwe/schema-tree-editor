@@ -22,13 +22,16 @@
           <div v-for="(item,itemIndex) in tab.props" :key="itemIndex">
             <div v-if="item.value === selectedTypes[infoIndex]">
               <div class="card-title">{{ item.props.label }}</div>
-              <a-card :title="null">
+              <a-card
+                  :bodyStyle="{padding:'16px'}"
+                  :title="null">
                 <a-row
                     type="flex"
                     justify="space-between"
                     align="top">
-                  <a-col v-for="opt in item.props.options" :span="11" :key="opt.name">
+                  <a-col class="col" v-for="opt in item.props.options" :span="11" :key="opt.name">
                     <a-form-item
+                        class="col-form-item"
                         :labelAlign="'right'"
                         :label="opt.label">
                       <a-select
@@ -187,6 +190,12 @@ function handleCancel() {
 .card-title {
   font-weight: bold;
   margin: 12px 0 8px 0;
+}
+.col{
+  //margin-bottom: 8px;
+}
+.col-form-item{
+  margin-bottom: 8px;
 }
 
 

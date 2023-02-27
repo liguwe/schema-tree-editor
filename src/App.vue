@@ -10,6 +10,12 @@ import Test from './components/SchemeEditor/Test.vue';
 </template>
 
 <style scoped>
+::v-deep(body){
+  height: 500vh;
+}
+body{
+
+}
 header {
   line-height: 1.5;
   max-height: 100vh;
